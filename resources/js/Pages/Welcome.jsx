@@ -1,13 +1,25 @@
 import React from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
-import { Link } from '@inertiajs/react';
+import { Link, Head, usePage } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Welcome({ auth, laravelVersion, phpVersion, canLogin, canRegister, topVideos = [] }) {
+export default function Welcome({ laravelVersion, phpVersion, canLogin, canRegister, topVideos = [] }) {
+    const { auth } = usePage().props;
+    const user = auth?.user;
+
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <AuthenticatedLayout
+            header={
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    Welcome
+                </h2>
+            }
+        >
+            <Head title="Welcome" />
+
             <div className="p-6 text-right">
                 {canLogin && (
-                    auth.user ? (
+                    user ? (
                         <Link
                             href={route('dashboard')}
                             className="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
@@ -66,11 +78,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion, canLogin, ca
                         ))}
                     </div>
                     <p className="mt-2 text-gray-500 dark:text-gray-300">Laravel v{laravelVersion} (PHP v{phpVersion})</p>
-
                 </section>
-                
             )}
-            
-        </div>
+        </AuthenticatedLayout>
     );
 }
