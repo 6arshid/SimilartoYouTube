@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VideoController;
+
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,6 +24,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+     // CRUD resource routes for videos
+     Route::resource('videos', VideoController::class);
+
+     // Extra routes for like/dislike actions
+     Route::post('videos/{video}/like', [VideoController::class, 'like'])->name('videos.like');
+     Route::post('videos/{video}/dislike', [VideoController::class, 'dislike'])->name('videos.dislike');
 });
 
 require __DIR__.'/auth.php';
