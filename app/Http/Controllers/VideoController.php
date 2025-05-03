@@ -178,26 +178,29 @@ public function explorer(Request $request)
             abort(403);
         }
     
-        $validated = $request->validate([
+        $rules = [
             'title'       => 'required|max:255',
             'description' => 'nullable|string',
-            'thumbnail'   => 'sometimes|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
+        ];
+    
+        // فقط اگر thumbnail ارسال شده بود، ولیدیشنش کن
+        if ($request->hasFile('thumbnail')) {
+            $rules['thumbnail'] = 'image|mimes:jpg,jpeg,png,webp|max:2048';
+        }
+    
+        $validated = $request->validate($rules);
     
         $video->title = $validated['title'];
         $video->description = $validated['description'] ?? '';
     
-        // اگر thumbnail جدید وجود دارد، آپلود شود
+        // اگر thumbnail جدید ارسال شده بود، جایگزین کن
         if ($request->hasFile('thumbnail')) {
             if ($video->thumbnail) {
                 Storage::delete($video->thumbnail);
             }
     
-            $thumbnailPath = $request->file('thumbnail')->store('thumbnails', [
-                'disk' => config('filesystems.default'),
-            ]);
-    
-            $video->thumbnail = $thumbnailPath;
+            $path = $request->file('thumbnail')->store('thumbnails', ['disk' => config('filesystems.default')]);
+            $video->thumbnail = $path;
         }
     
         $video->save();
