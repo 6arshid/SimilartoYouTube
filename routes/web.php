@@ -34,7 +34,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-     // CRUD resource routes for videos
      Route::get('/videos', [VideoController::class, 'index'])->name('videos.index');
      Route::get('/videos/create', [VideoController::class, 'create'])->name('videos.create');
      Route::post('/videos', [VideoController::class, 'store'])->name('videos.store');
@@ -42,8 +41,6 @@ Route::middleware('auth')->group(function () {
      Route::get('/videos/{video}/edit', [VideoController::class, 'edit'])->name('videos.edit');
      Route::put('/videos/{video}', [VideoController::class, 'update'])->name('videos.update');
      Route::delete('/videos/{video}', [VideoController::class, 'destroy'])->name('videos.destroy');
-
-     // Extra routes for like/dislike actions
      Route::post('videos/{video}/like', [VideoController::class, 'like'])->name('videos.like');
      Route::post('videos/{video}/dislike', [VideoController::class, 'dislike'])->name('videos.dislike');
      Route::post('/subscribe/{user}', [ProfileController::class, 'subscribe'])->name('subscribe');
