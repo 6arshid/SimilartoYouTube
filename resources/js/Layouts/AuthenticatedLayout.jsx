@@ -72,7 +72,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <path strokeLinecap="round" strokeLinejoin="round"
                                       d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6" />
                             </svg>
-                            <span>Feed</span>
+                            <span>My Feed</span>
                         </div>
                     </NavLink>
                     <NavLink href={route('videos.index')} active={route().current('videos.index')}>
@@ -82,7 +82,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <path strokeLinecap="round" strokeLinejoin="round"
                                       d="M15 10l4.553 2.276a1 1 0 010 1.448L15 16M4 6h16M4 12h8M4 18h16" />
                             </svg>
-                            <span>Videos</span>
+                            <span>My Videos</span>
                         </div>
                     </NavLink>
                     <NavLink href={route('playlists.my')} active={route().current('playlists.my')}>
