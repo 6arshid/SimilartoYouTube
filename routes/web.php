@@ -9,13 +9,20 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
+use App\Models\Video;
 use App\Models\Notification;
 Route::get('/', function () {
+    $topVideos = Video::with('user')
+        ->orderByDesc('views')
+        ->take(60)
+        ->get(['id', 'title', 'slug', 'thumbnail', 'user_id', 'views']);
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
+        'laravelVersion' => Illuminate\Foundation\Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'topVideos' => $topVideos,
     ]);
 });
 
