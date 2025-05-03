@@ -16,6 +16,17 @@ export default function Show(props) {
     router.post(`/videos/${video.id}/dislike`);
   };
 
+  const handleDownload = () => {
+    window.open(videoUrl, '_blank');
+  };
+
+  const handleShare = () => {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert('لینک ویدیو کپی شد');
+    });
+  };
+
   return (
     <div className="p-6">
       <Head title={video.title} />
@@ -49,6 +60,13 @@ export default function Show(props) {
         >
           👎 دیسلایک ({video.dislikes_count})
         </button>
+      </div>
+
+      {/* Subscribe / Share / Download */}
+      <div className="mb-6 flex gap-4">
+        <button className="px-4 py-2 bg-purple-600 text-white rounded">عضویت</button>
+        <button onClick={handleShare} className="px-4 py-2 bg-yellow-500 text-white rounded">اشتراک‌گذاری</button>
+        <button onClick={handleDownload} className="px-4 py-2 bg-gray-700 text-white rounded">دانلود ویدیو</button>
       </div>
 
       {/* Back link */}

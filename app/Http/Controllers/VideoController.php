@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str; // بالا اضافه کن
 
 class VideoController extends Controller
 {
@@ -65,19 +66,20 @@ class VideoController extends Controller
         ]);
     
         $file = $request->file('video');
-    
-        // ذخیره در دیسک public در مسیر videos/
         $path = $file->store('videos', 'public');
+    
+        $slug = Str::random(12); // تولید شناسه یکتا
     
         $video = Video::create([
             'user_id'     => Auth::id(),
             'title'       => $validated['title'],
             'description' => $validated['description'] ?? '',
-            'path'        => $path, // فقط مسیر داخل public storage
+            'path'        => $path,
+            'slug'        => $slug,
             'views'       => 0,
         ]);
     
-        return redirect()->route('videos.index');
+        return redirect()->to("/watch/{$slug}");
     }
     
 
@@ -197,4 +199,26 @@ class VideoController extends Controller
         }
         return back();
     }
+    public function watch($slug)
+{
+    $video = Video::where('slug', $slug)
+        ->withCount(['likes', 'dislikes'])
+        ->with('user')
+        ->firstOrFail();
+
+    $video->increment('views');
+
+    $userLike = null;
+    if (Auth::check()) {
+        $like = $video->likesRelation()->where('user_id', Auth::id())->first();
+        if ($like) {
+            $userLike = $like->like ? 'like' : 'dislike';
+        }
+    }
+
+    return Inertia::render('Videos/Show', [
+        'video'    => $video,
+        'userLike' => $userLike,
+    ]);
+}
 }

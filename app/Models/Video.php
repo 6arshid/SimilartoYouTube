@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Video extends Model {
     use HasFactory;
-    protected $fillable = ['user_id', 'title', 'description', 'path', 'views'];
+    protected $fillable = ['user_id', 'title', 'description', 'path', 'views', 'slug'];
 
     // ویدیو متعلق به یک کاربر است
     public function user() {

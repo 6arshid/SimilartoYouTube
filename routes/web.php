@@ -31,5 +31,7 @@ Route::middleware('auth')->group(function () {
      Route::post('videos/{video}/like', [VideoController::class, 'like'])->name('videos.like');
      Route::post('videos/{video}/dislike', [VideoController::class, 'dislike'])->name('videos.dislike');
 });
+// Route::get('/watch/{video}', [VideoController::class, 'show'])->name('videos.watch');
+Route::get('/watch/{slug}', [VideoController::class, 'watch'])->name('videos.watch');
 
 require __DIR__.'/auth.php';

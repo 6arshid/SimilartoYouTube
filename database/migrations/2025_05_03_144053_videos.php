@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->string('path');      // مسیر ذخیره فایل ویدیو
             $table->unsignedBigInteger('views')->default(0);  // تعداد بازدید
+            $table->string('slug')->unique();
             $table->timestamps();
         });
     }
