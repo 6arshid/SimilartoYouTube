@@ -16,7 +16,7 @@ class VideoSeeder extends Seeder
                 'slug'       => "test-video-{$i}",
                 'description'=> 'Sample video for welcome page.',
                 'path'       => "videos/sample{$i}.mp4",
-                'thumbnail'  => "thumbnails/sample.jpg",
+                'thumbnail'  => "images/default-thumbnail.jpg",
                 'views'      => rand(100, 1000),
             ]);
         }
