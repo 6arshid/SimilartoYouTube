@@ -55,14 +55,14 @@ export default function AuthenticatedLayout({ header, children }) {
                     </button>
                 </div>
                 <nav className="mt-4 flex flex-col space-y-2 px-4">
-                    <NavLink href={route('dashboard')} active={route().current('dashboard')}>
+                    <NavLink href={route('videos.feed')} active={route().current('videos.feed')}>
                         <div className="flex items-center space-x-2">
                             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2"
                                  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round"
                                       d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6" />
                             </svg>
-                            <span>Dashboard</span>
+                            <span>Feed</span>
                         </div>
                     </NavLink>
                     <NavLink href={route('videos.index')} active={route().current('videos.index')}>
