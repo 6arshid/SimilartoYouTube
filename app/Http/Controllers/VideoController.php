@@ -16,13 +16,47 @@ class VideoController extends Controller
 {
     
 
-    // نمایش لیست ویدیوها با قابلیت جستجو، فیلتر و صفحه‌بندی
     public function index(Request $request)
+    {
+        $query = Video::query()
+            ->withCount(['likes', 'dislikes'])
+            ->select('id', 'title', 'description', 'slug', 'user_id', 'created_at', 'views')
+            ->where('user_id', auth()->id()); // فقط ویدیوهای کاربر لاگین کرده
+    
+        if ($search = $request->input('search')) {
+            $query->where('title', 'like', "%{$search}%");
+        }
+    
+        if ($date = $request->input('date')) {
+            $query->whereDate('created_at', $date);
+        }
+    
+        $query->orderBy('created_at', 'desc');
+    
+        $videos = $query->paginate(30)->withQueryString();
+    
+        if ($request->wantsJson()) {
+            return response()->json($videos);
+        }
+    
+        // اگر نیازی به لیست کاربران دیگر نیست، این را هم می‌توان حذف کرد
+        $users = User::orderBy('name')->get(['id', 'name']);
+    
+        return Inertia::render('Videos/Index', [
+            'videos'  => $videos,
+            'users'   => $users, // یا حذف کن اگر لازم نیست
+            'filters' => [
+                'search' => $search,
+                'date'   => $date,
+            ],
+        ]);
+    }
+    
+public function explorer(Request $request)
 {
-    // فیلترهای جستجو
     $query = Video::query()
         ->withCount(['likes', 'dislikes'])
-        ->select('id', 'title', 'description', 'slug', 'user_id', 'created_at', 'views'); // 👈 slug اضافه شد
+        ->select('id', 'title', 'description', 'slug', 'user_id', 'created_at', 'views', 'thumbnail');
 
     if ($search = $request->input('search')) {
         $query->where('title', 'like', "%{$search}%");
@@ -36,31 +70,23 @@ class VideoController extends Controller
         $query->whereDate('created_at', $date);
     }
 
-    $query->orderBy('created_at', 'desc');
+    $videos = $query->orderByDesc('created_at')->paginate(30)->withQueryString();
+    $users = \App\Models\User::orderBy('name')->get(['id', 'name']);
 
-    $videos = $query->paginate(30)->withQueryString();
-
-    if ($request->wantsJson()) {
-        return response()->json($videos);
-    }
-
-    $users = User::orderBy('name')->get(['id', 'name']);
-
-    return Inertia::render('Videos/Index', [
-        'videos'  => $videos,
-        'users'   => $users,
+    return Inertia::render('Explorer', [
+        'videos' => $videos,
+        'users' => $users,
         'filters' => [
             'search' => $search,
-            'user'   => $userId,
-            'date'   => $date,
-        ],
+            'user' => $userId,
+            'date' => $date,
+        ]
     ]);
 }
 
 
-    // نمایش فرم ایجاد ویدیو جدید
+    
     public function create() {
-        // در اینجا صرفاً صفحه خالی فرم باز می‌شود (اطلاعاتی از سرور نیاز نیست)
         return Inertia::render('Videos/Create');
     }
 
