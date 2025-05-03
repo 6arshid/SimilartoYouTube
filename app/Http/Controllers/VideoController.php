@@ -258,21 +258,29 @@ class VideoController extends Controller
             ->get();
     
         // ✅ دریافت ویدیوهای دیگر همان کاربر
-        $relatedVideos = Video::where('id', '!=', $video->id)
-        ->where('user_id', $video->user_id)
-        ->select('id', 'title', 'slug', 'thumbnail', 'user_id') // 👈 thumbnail حتماً اینجا باشه
+        $relatedFromUser = Video::where('user_id', $video->user_id)
+        ->where('id', '!=', $video->id)
+        ->select('id', 'title', 'slug', 'thumbnail', 'user_id')
         ->with('user')
         ->latest()
         ->take(10)
         ->get();
-        // ✅ اگر ویدیویی نبود، از دیگر کاربران بیاور
-        if ($relatedVideos->isEmpty()) {
-            $relatedVideos = Video::where('id', '!=', $video->id)
-                ->with('user')
-                ->latest()
-                ->take(10)
-                ->get();
-        }
+    
+    $remaining = 10 - $relatedFromUser->count();
+    
+    $relatedFromOthers = collect();
+    
+    if ($remaining > 0) {
+        $relatedFromOthers = Video::where('user_id', '!=', $video->user_id)
+            ->where('id', '!=', $video->id)
+            ->select('id', 'title', 'slug', 'thumbnail', 'user_id')
+            ->with('user')
+            ->latest()
+            ->take($remaining)
+            ->get();
+    }
+    
+    $relatedVideos = $relatedFromUser->merge($relatedFromOthers);
     
         return Inertia::render('Videos/Show', [
             'video'         => $video,
