@@ -9,7 +9,8 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str; // بالا اضافه کن
+use Illuminate\Support\Str;
+
 
 class VideoController extends Controller
 {
@@ -62,24 +63,47 @@ class VideoController extends Controller
         $validated = $request->validate([
             'title'       => 'required|max:255',
             'description' => 'nullable|string',
-            'video'       => 'required|file|mimes:mp4,avi,webm|max:51200',
+            'video'       => 'required|file|mimes:mp4,webm,avi|max:51200',
+            'thumbnail'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
     
-        $file = $request->file('video');
-        $path = $file->store('videos', 'public');
+        // 1. ذخیره ویدیو
+        $videoFile = $request->file('video');
+        $path = $videoFile->store('videos', 'public');
     
-        $slug = Str::random(12); // تولید شناسه یکتا
+        // 2. تولید slug یکتا
+        $slug = Str::random(12);
     
+        // 3. ذخیره یا ساخت thumbnail
+        $thumbnailPath = null;
+    
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+        } else {
+            $thumbnailName = Str::random(12) . '.jpg';
+            $videoFullPath = storage_path("app/public/{$path}");
+            $generatedPath = storage_path("app/public/thumbnails/{$thumbnailName}");
+    
+            // تولید thumbnail با FFmpeg از ثانیه 1
+            exec("ffmpeg -i \"{$videoFullPath}\" -ss 00:00:01 -vframes 1 \"{$generatedPath}\"");
+    
+            if (file_exists($generatedPath)) {
+                $thumbnailPath = "thumbnails/{$thumbnailName}";
+            }
+        }
+    
+        // 4. ذخیره در دیتابیس
         $video = Video::create([
-            'user_id'     => Auth::id(),
+            'user_id'     => auth()->id(),
             'title'       => $validated['title'],
             'description' => $validated['description'] ?? '',
             'path'        => $path,
+            'thumbnail'   => $thumbnailPath,
             'slug'        => $slug,
             'views'       => 0,
         ]);
     
-        return redirect()->to("/watch/{$slug}");
+        return redirect()->to("/watch/{$video->slug}");
     }
     
 
@@ -235,12 +259,12 @@ class VideoController extends Controller
     
         // ✅ دریافت ویدیوهای دیگر همان کاربر
         $relatedVideos = Video::where('id', '!=', $video->id)
-            ->where('user_id', $video->user_id)
-            ->with('user')
-            ->latest()
-            ->take(10)
-            ->get();
-    
+        ->where('user_id', $video->user_id)
+        ->select('id', 'title', 'slug', 'thumbnail', 'user_id') // 👈 thumbnail حتماً اینجا باشه
+        ->with('user')
+        ->latest()
+        ->take(10)
+        ->get();
         // ✅ اگر ویدیویی نبود، از دیگر کاربران بیاور
         if ($relatedVideos->isEmpty()) {
             $relatedVideos = Video::where('id', '!=', $video->id)

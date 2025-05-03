@@ -164,17 +164,26 @@ export default function Show() {
       </div>
 
       {/* Sidebar */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold mb-2">ویدیوهای دیگر</h3>
-        {relatedVideos.map(v => (
-          <div key={v.id} className="border rounded p-2">
-            <a href={`/watch/${v.slug}`} className="text-sm font-semibold text-blue-600 hover:underline block">
-              {v.title}
-            </a>
-            <p className="text-xs text-gray-500">توسط: {v.user?.name || 'کاربر'}</p>
-          </div>
-        ))}
-      </div>
+{/* Sidebar */}
+<div className="space-y-4">
+  <h3 className="text-lg font-bold mb-2">ویدیوهای دیگر</h3>
+  {relatedVideos.map(v => (
+    <div key={v.id} className="border rounded p-2">
+      <a href={`/watch/${v.slug}`} className="block">
+        <img
+          src={v.thumbnail ? `/storage/${v.thumbnail}` : '/images/default-thumbnail.jpg'}
+          onError={(e) => { e.target.src = '/images/default-thumbnail.jpg'; }}
+          alt={v.title}
+          className="w-full h-28 object-cover rounded mb-2"
+        />
+        <span className="text-sm font-semibold text-blue-600 hover:underline block">
+          {v.title}
+        </span>
+      </a>
+      <p className="text-xs text-gray-500">توسط: {v.user?.name || 'کاربر'}</p>
+    </div>
+  ))}
+</div>
     </div>
   );
 }
