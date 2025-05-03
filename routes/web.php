@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
+use App\Models\Notification;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -50,7 +51,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/user/{user}', function (User $user) {
         return response()->json($user->only(['id', 'name', 'avatar', 'cover']));
     });
-
+    Route::get('/notifications', function () {
+        return auth()->user()->notifications()->latest()->get();
+    });
+    
+    Route::post('/notifications/mark-read', function () {
+        Auth::user()->notifications()->update(['read' => true]);
+        return response()->noContent();
+    });
+    
 
 });
 // Route::get('/watch/{video}', [VideoController::class, 'show'])->name('videos.watch');

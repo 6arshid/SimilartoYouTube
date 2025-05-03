@@ -1,3 +1,4 @@
+// AuthenticatedLayout.jsx
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import NavLink from '@/Components/NavLink';
 import { Link, usePage } from '@inertiajs/react';
@@ -7,6 +8,8 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [showNotif, setShowNotif] = useState(false);
     const dropdownRef = useRef();
 
     useEffect(() => {
@@ -19,6 +22,17 @@ export default function AuthenticatedLayout({ header, children }) {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
+    }, []);
+
+    useEffect(() => {
+        const fetchNotifications = () => {
+            fetch('/notifications')
+                .then(res => res.json())
+                .then(setNotifications);
+        };
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 5000);
+        return () => clearInterval(interval);
     }, []);
 
     return (
@@ -80,13 +94,53 @@ export default function AuthenticatedLayout({ header, children }) {
                         </svg>
                     </button>
 
-                    {/* Optional Header Content */}
-                    <div className="flex-1 text-center sm:text-left">
-                        {header}
-                    </div>
+                    <div className="flex-1 text-center sm:text-left">{header}</div>
 
-                    {/* Profile Dropdown */}
-                    <div className="relative" ref={dropdownRef}>
+                    {/* Notifications + Profile Dropdown */}
+                    <div className="flex items-center gap-4 relative" ref={dropdownRef}>
+                        <div className="relative">
+                            <button onClick={() => setShowNotif(prev => !prev)} className="relative text-xl">
+                                🔔
+                                {notifications.some(n => !n.read) && (
+                                    <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1 text-xs">
+                                        {notifications.filter(n => !n.read).length}
+                                    </span>
+                                )}
+                            </button>
+
+                            {showNotif && (
+                                <div className="absolute right-0 mt-2 w-80 bg-white rounded shadow z-50">
+                                    <div className="flex items-center justify-between px-3 py-2 border-b">
+                                        <span className="font-bold text-sm">Notifications</span>
+                                        <button
+                                            onClick={() => {
+                                                fetch('/notifications/mark-read', { method: 'POST' }).then(() => {
+                                                    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                                                });
+                                            }}
+                                            className="text-xs text-blue-600"
+                                        >
+                                            Mark all as read
+                                        </button>
+                                    </div>
+                                    <ul className="max-h-60 overflow-y-auto text-sm">
+                                        {notifications.length === 0 ? (
+                                            <li className="p-3 text-gray-500 text-center">No notifications</li>
+                                        ) : (
+                                            notifications.map(n => (
+                                                <li
+                                                    key={n.id}
+                                                    className={`px-3 py-2 border-b ${n.read ? 'text-gray-500' : 'text-black font-medium'}`}
+                                                >
+                                                    {n.message}
+                                                </li>
+                                            ))
+                                        )}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+
                         <button
                             onClick={() => setProfileDropdownOpen((prev) => !prev)}
                             className="text-sm font-medium text-gray-800 hover:underline"
