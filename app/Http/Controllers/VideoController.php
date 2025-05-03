@@ -172,30 +172,39 @@ public function explorer(Request $request)
     }
 
     // بروزرسانی اطلاعات ویدیو
-    public function update(Request $request, Video $video) {
+    public function update(Request $request, Video $video)
+    {
         if ($video->user_id !== Auth::id()) {
             abort(403);
         }
+    
         $validated = $request->validate([
             'title'       => 'required|max:255',
             'description' => 'nullable|string',
-            'video'       => 'sometimes|file|mimes:mp4,avi,webm|max:51200',
+            'thumbnail'   => 'sometimes|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
-        // بروزرسانی فیلدهای ساده
+    
         $video->title = $validated['title'];
         $video->description = $validated['description'] ?? '';
-        // در صورت ارسال فایل جدید، جایگزین شود
-        if ($request->hasFile('video')) {
-            // حذف فایل قدیمی در فضای ذخیره‌سازی
-            Storage::delete($video->path);
-            // آپلود فایل جدید
-            $file = $request->file('video');
-            $path = $file->store('videos', ['disk' => config('filesystems.default')]);
-            $video->path = $path;
+    
+        // اگر thumbnail جدید وجود دارد، آپلود شود
+        if ($request->hasFile('thumbnail')) {
+            if ($video->thumbnail) {
+                Storage::delete($video->thumbnail);
+            }
+    
+            $thumbnailPath = $request->file('thumbnail')->store('thumbnails', [
+                'disk' => config('filesystems.default'),
+            ]);
+    
+            $video->thumbnail = $thumbnailPath;
         }
+    
         $video->save();
+    
         return redirect("/watch/{$video->slug}");
     }
+    
 
     // حذف ویدیو
     public function destroy(Video $video) {
