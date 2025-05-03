@@ -17,12 +17,8 @@ class CommentController extends Controller
             'body' => 'required|string',
             'parent_id' => 'nullable|exists:comments,id',
         ]);
-        Notification::create([
-            'user_id' => $video->user_id,
-            'type' => 'comment',
-            'message' => 'Manual test message',
-            'read' => false,
-        ]);
+        notify($video->user_id, 'comment', 'Someone commented on your video.', "/watch/{$video->slug}");
+
                 Comment::create([
             'user_id'   => Auth::id(),
             'video_id'  => $video->id,
