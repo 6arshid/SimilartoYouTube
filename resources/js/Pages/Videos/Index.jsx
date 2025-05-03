@@ -1,11 +1,10 @@
 // resources/js/Pages/Videos/Index.jsx
 import { useState, useEffect } from 'react';
-import { router } from '@inertiajs/react';   // جهت مسیریابی برنامه Inertia
+import { router, Link } from '@inertiajs/react';   // اضافه کردن Link
 import axios from 'axios';
 
 export default function Index(props) {
   const { videos, users, filters } = props;
-  // State برای فیلترها و نتایج
   const [search, setSearch] = useState(filters.search || '');
   const [user, setUser] = useState(filters.user || '');
   const [date, setDate] = useState(filters.date || '');
@@ -14,7 +13,6 @@ export default function Index(props) {
   const [lastPage, setLastPage] = useState(videos.last_page);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // اگر props.videos تغییر کرد (مثلاً بعد از جستجو)، videoList را بازنشانی کن
   useEffect(() => {
     setVideoList(videos.data);
     setCurrentPage(videos.current_page);
@@ -23,23 +21,20 @@ export default function Index(props) {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    // ارسال پارامترهای فیلتر به سرور با Inertia
     router.get('/videos', { 
       search: search || undefined,
       user: user || undefined,
       date: date || undefined 
     });
-    // نیازی به setVideoList نیست، useEffect بالا پس از دریافت نتایج جدید فراخوانی می‌شود
   };
 
   const loadMore = () => {
     if (currentPage < lastPage && !loadingMore) {
       setLoadingMore(true);
-      // درخواست صفحه بعدی نتایج به صورت JSON
       axios.get(`/videos?page=${currentPage + 1}&search=${search}&user=${user}&date=${date}`)
         .then(response => {
           const newData = response.data.data;
-          setVideoList(prevList => [...prevList, ...newData]);  // الحاق موارد جدید
+          setVideoList(prevList => [...prevList, ...newData]);
           setCurrentPage(response.data.current_page);
           setLastPage(response.data.last_page);
         })
@@ -49,6 +44,16 @@ export default function Index(props) {
 
   return (
     <div className="p-6">
+      {/* دکمه ایجاد ویدیو جدید */}
+      <div className="mb-4 flex justify-end">
+        <Link
+          href="/videos/create"
+          className="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          + ایجاد ویدیو جدید
+        </Link>
+      </div>
+
       {/* فرم جستجو و فیلتر */}
       <form onSubmit={handleSearchSubmit} className="mb-4 flex flex-col md:flex-row md:items-end md:space-x-4">
         <div className="flex-1 mb-2 md:mb-0">
@@ -89,12 +94,10 @@ export default function Index(props) {
               <span className="text-green-600 font-semibold mx-2">👍 {video.likes_count}</span>
               <span className="text-red-600 font-semibold mx-2">👎 {video.dislikes_count}</span>
               <span className="text-gray-600 mx-2">👁️ {video.views}</span>
-              <a href={`/videos/${video.id}`} className="text-blue-500 hover:underline mx-2">مشاهده</a>
-              {/* لینک‌های ویرایش/حذف فقط برای صاحب ویدیو نمایش داده شود */}
+              <Link href={`/videos/${video.id}`} className="text-blue-500 hover:underline mx-2">مشاهده</Link>
               {video.user_id === props.auth.user.id && (
                 <>
-                  <a href={`/videos/${video.id}/edit`} className="text-yellow-500 hover:underline mx-2">ویرایش</a>
-                  {/* برای حذف می‌توانیم از Inertia<form> استفاده کنیم، اینجا ساده لینک دادیم */}
+                  <Link href={`/videos/${video.id}/edit`} className="text-yellow-500 hover:underline mx-2">ویرایش</Link>
                 </>
               )}
             </div>
@@ -102,7 +105,7 @@ export default function Index(props) {
         ))}
       </div>
 
-      {/* دکمه "بارگذاری بیشتر" */}
+      {/* دکمه بارگذاری بیشتر */}
       {currentPage < lastPage && (
         <div className="text-center mt-4">
           <button onClick={loadMore} disabled={loadingMore}
