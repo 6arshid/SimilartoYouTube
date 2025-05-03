@@ -22,6 +22,8 @@
         "vite": "^6.2.4"
     },
     "dependencies": {
-        "react-dropzone": "^14.3.8"
+        "browser-image-compression": "^2.0.2",
+        "react-dropzone": "^14.3.8",
+        "react-easy-crop": "^5.4.1"
     }
 }

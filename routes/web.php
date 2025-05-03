@@ -36,6 +36,10 @@ Route::middleware('auth')->group(function () {
      Route::post('/videos/{video}/comments', [CommentController::class, 'store'])->name('comments.store');
      Route::post('/comments/{comment}/like', [CommentLikeController::class, 'toggle'])->name('comments.like');
      Route::post('/videos/{video}/like', [VideoController::class, 'toggle']);
+     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+     Route::get('/profile/crop', function () {
+        return Inertia::render('Profile/CropUpload');
+    })->name('profile.crop')->middleware('auth');
 
 
 });

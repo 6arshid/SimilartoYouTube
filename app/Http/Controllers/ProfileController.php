@@ -88,8 +88,32 @@ class ProfileController extends Controller
             ->get();
 
         return Inertia::render('Profile/Show', [
-            'user'   => $user,
+            'user' => $user,
             'videos' => $videos,
         ]);
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'cover' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+        ]);
+
+        $user = Auth::user();
+
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $avatarPath;
+        }
+
+        if ($request->hasFile('cover')) {
+            $coverPath = $request->file('cover')->store('covers', 'public');
+            $user->cover = $coverPath;
+        }
+
+        $user->save();
+
+        return back();
     }
 }
