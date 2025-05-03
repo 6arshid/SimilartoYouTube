@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
      Route::get('/feed', [VideoController::class, 'feed'])->name('videos.feed');
      Route::post('/videos/{video}/comments', [CommentController::class, 'store'])->name('comments.store');
      Route::post('/comments/{comment}/like', [CommentLikeController::class, 'toggle'])->name('comments.like');
+     Route::post('/videos/{video}/like', [VideoController::class, 'toggle']);
 
 
 });

@@ -1,25 +1,29 @@
 // resources/js/Pages/Videos/Show.jsx
 import { router, Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import axios from 'axios';
 
 export default function Show() {
   const { video, userLike, isFollowing, auth, comments = [], relatedVideos = [] } = usePage().props;
 
   const [comment, setComment] = useState('');
   const [replyTo, setReplyTo] = useState(null);
+  const [likeCount, setLikeCount] = useState(video.likes_count);
+  const [dislikeCount, setDislikeCount] = useState(video.dislikes_count);
+  const [userLikeState, setUserLikeState] = useState(userLike);
 
   const videoUrl = video.path.startsWith('http')
     ? video.path
     : `/storage/${video.path}`;
 
-  const handleLike = () => {
-    if (!auth?.user) return alert('برای لایک باید وارد شوید.');
-    router.post(`/videos/${video.id}/like`);
-  };
+  const handleVideoLike = (isLike) => {
+    if (!auth?.user) return alert('برای رأی دادن وارد شوید');
 
-  const handleDislike = () => {
-    if (!auth?.user) return alert('برای دیسلایک باید وارد شوید.');
-    router.post(`/videos/${video.id}/dislike`);
+    axios.post(`/videos/${video.id}/like`, { like: isLike }).then(res => {
+      setLikeCount(res.data.likes_count);
+      setDislikeCount(res.data.dislikes_count);
+      setUserLikeState(res.data.userLike);
+    });
   };
 
   const handleDownload = () => {
@@ -82,16 +86,16 @@ export default function Show() {
 
         <div className="mb-4 flex gap-4">
           <button
-            onClick={handleLike}
-            className={`px-4 py-2 rounded ${userLike === 'like' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => handleVideoLike(true)}
+            className={`px-4 py-2 rounded ${userLikeState === 'like' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
           >
-            👍 لایک ({video.likes_count})
+            👍 لایک ({likeCount})
           </button>
           <button
-            onClick={handleDislike}
-            className={`px-4 py-2 rounded ${userLike === 'dislike' ? 'bg-red-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => handleVideoLike(false)}
+            className={`px-4 py-2 rounded ${userLikeState === 'dislike' ? 'bg-red-600 text-white' : 'bg-gray-200'}`}
           >
-            👎 دیسلایک ({video.dislikes_count})
+            👎 دیسلایک ({dislikeCount})
           </button>
         </div>
 
@@ -164,26 +168,25 @@ export default function Show() {
       </div>
 
       {/* Sidebar */}
-{/* Sidebar */}
-<div className="space-y-4">
-  <h3 className="text-lg font-bold mb-2">ویدیوهای دیگر</h3>
-  {relatedVideos.map(v => (
-    <div key={v.id} className="border rounded p-2">
-      <a href={`/watch/${v.slug}`} className="block">
-        <img
-          src={v.thumbnail ? `/storage/${v.thumbnail}` : '/images/default-thumbnail.jpg'}
-          onError={(e) => { e.target.src = '/images/default-thumbnail.jpg'; }}
-          alt={v.title}
-          className="w-full h-28 object-cover rounded mb-2"
-        />
-        <span className="text-sm font-semibold text-blue-600 hover:underline block">
-          {v.title}
-        </span>
-      </a>
-      <p className="text-xs text-gray-500">توسط: {v.user?.name || 'کاربر'}</p>
-    </div>
-  ))}
-</div>
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold mb-2">ویدیوهای دیگر</h3>
+        {relatedVideos.map(v => (
+          <div key={v.id} className="border rounded p-2">
+            <a href={`/watch/${v.slug}`} className="block">
+              <img
+                src={v.thumbnail ? `/storage/${v.thumbnail}` : '/images/default-thumbnail.jpg'}
+                onError={(e) => { e.target.src = '/images/default-thumbnail.jpg'; }}
+                alt={v.title}
+                className="w-full h-28 object-cover rounded mb-2"
+              />
+              <span className="text-sm font-semibold text-blue-600 hover:underline block">
+                {v.title}
+              </span>
+            </a>
+            <p className="text-xs text-gray-500">توسط: {v.user?.name || 'کاربر'}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -294,4 +294,34 @@ public function feed()
 
     return Inertia::render('Videos/Feed', ['videos' => $videos]);
 }
+public function toggle(Request $request, Video $video)
+{
+    $request->validate([
+        'like' => 'required|boolean',
+    ]);
+
+    $user = Auth::user();
+
+    $existing = $video->likesRelation()->where('user_id', $user->id)->first();
+
+    if ($existing) {
+        if ($existing->like == $request->like) {
+            $existing->delete();
+        } else {
+            $existing->update(['like' => $request->like]);
+        }
+    } else {
+        $video->likesRelation()->create([
+            'user_id' => $user->id,
+            'like'    => $request->like,
+        ]);
+    }
+
+    return response()->json([
+        'likes_count'    => $video->likes()->count(),
+        'dislikes_count' => $video->dislikes()->count(),
+        'userLike'       => $video->likesRelation()->where('user_id', $user->id)->value('like') ? 'like' : 'dislike',
+    ]);
+}
+
 }
