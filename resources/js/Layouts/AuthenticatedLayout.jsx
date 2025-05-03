@@ -132,7 +132,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                     key={n.id}
                                                     className={`px-3 py-2 border-b ${n.read ? 'text-gray-500' : 'text-black font-medium'}`}
                                                 >
-                                                    {n.message}
+                                                   <a href={n.url} className="hover:underline">{n.message}</a>
                                                 </li>
                                             ))
                                         )}

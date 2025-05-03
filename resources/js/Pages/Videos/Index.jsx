@@ -137,12 +137,8 @@ export default function Dashboard(props) {
                 <span className="text-green-600 font-semibold mx-2">👍 {video.likes_count}</span>
                 <span className="text-red-600 font-semibold mx-2">👎 {video.dislikes_count}</span>
                 <span className="text-gray-600 mx-2">👁️ {video.views}</span>
-                <Link
-                  href={`/videos/${video.id}`}
-                  className="text-blue-500 hover:underline mx-2"
-                >
-                  View
-                </Link>
+                <Link href={`/watch/${video.slug}`}>View</Link>
+
                 {video.user_id === props.auth.user.id && (
                   <>
                     <Link

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('type'); // comment, like, subscribe ...
             $table->text('message');
             $table->boolean('read')->default(false);
+            $table->string('url')->nullable();
             $table->timestamps();
         });
     }

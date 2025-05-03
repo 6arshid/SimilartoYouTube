@@ -17,39 +17,46 @@ class VideoController extends Controller
     
 
     // نمایش لیست ویدیوها با قابلیت جستجو، فیلتر و صفحه‌بندی
-    public function index(Request $request) {
-        // فیلترهای جستجو
-        $query = Video::query()->withCount(['likes', 'dislikes']);  // محاسبه تعداد لایک/دیسلایک
-        if ($search = $request->input('search')) {
-            $query->where('title', 'like', "%{$search}%");
-        }
-        if ($userId = $request->input('user')) {
-            $query->where('user_id', $userId);
-        }
-        if ($date = $request->input('date')) {
-            // فیلتر بر اساس تاریخ ایجاد (همان روز)
-            $query->whereDate('created_at', $date);
-        }
-        $query->orderBy('created_at', 'desc');
-        $videos = $query->paginate(5)->withQueryString(); // صفحه‌بندی (۵ آیتم در هر صفحه)
+    public function index(Request $request)
+{
+    // فیلترهای جستجو
+    $query = Video::query()
+        ->withCount(['likes', 'dislikes'])
+        ->select('id', 'title', 'description', 'slug', 'user_id', 'created_at', 'views'); // 👈 slug اضافه شد
 
-        // اگر درخواست AJAX باشد (برای "Load More")، داده خام JSON برگردانیم
-        if ($request->wantsJson()) {
-            return response()->json($videos);
-        }
-
-        // در غیراینصورت، یک پاسخ Inertia با props لازم
-        $users = User::orderBy('name')->get(['id','name']);  // لیست کاربران جهت فیلتر
-        return Inertia::render('Videos/Index', [
-            'videos'  => $videos,
-            'users'   => $users,
-            'filters' => [
-                'search' => $search,
-                'user'   => $userId,
-                'date'   => $date,
-            ],
-        ]);
+    if ($search = $request->input('search')) {
+        $query->where('title', 'like', "%{$search}%");
     }
+
+    if ($userId = $request->input('user')) {
+        $query->where('user_id', $userId);
+    }
+
+    if ($date = $request->input('date')) {
+        $query->whereDate('created_at', $date);
+    }
+
+    $query->orderBy('created_at', 'desc');
+
+    $videos = $query->paginate(5)->withQueryString();
+
+    if ($request->wantsJson()) {
+        return response()->json($videos);
+    }
+
+    $users = User::orderBy('name')->get(['id', 'name']);
+
+    return Inertia::render('Videos/Index', [
+        'videos'  => $videos,
+        'users'   => $users,
+        'filters' => [
+            'search' => $search,
+            'user'   => $userId,
+            'date'   => $date,
+        ],
+    ]);
+}
+
 
     // نمایش فرم ایجاد ویدیو جدید
     public function create() {
@@ -161,7 +168,7 @@ class VideoController extends Controller
             $video->path = $path;
         }
         $video->save();
-        return redirect()->route('videos.show', $video);
+        return redirect("/watch/{$video->slug}");
     }
 
     // حذف ویدیو
