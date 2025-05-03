@@ -70,5 +70,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
+    public function playlists()
+    {
+        return $this->hasMany(\App\Models\Playlist::class);
+    }
 
 }

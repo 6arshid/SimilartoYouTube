@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentLikeController;
+use App\Http\Controllers\PlaylistController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -44,9 +45,6 @@ Route::middleware('auth')->group(function () {
      Route::post('/comments/{comment}/like', [CommentLikeController::class, 'toggle'])->name('comments.like');
      Route::post('/videos/{video}/like', [VideoController::class, 'toggle']);
      Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
-    //  Route::get('/profile/crop', function () {
-    //     return Inertia::render('Profile/CropUpload');
-    // })->name('profile.crop')->middleware('auth');
     Route::post('/profile/avatar/delete', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     Route::get('/api/user/{user}', function (User $user) {
         return response()->json($user->only(['id', 'name', 'avatar', 'cover']));
@@ -60,7 +58,12 @@ Route::middleware('auth')->group(function () {
         return response()->noContent();
     });
     Route::get('/watch/{slug}', [VideoController::class, 'watch'])->name('videos.watch');
-
+    Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
+    Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
+    Route::post('/playlists/{playlist}/add-video', [PlaylistController::class, 'addVideo'])->name('playlists.addVideo');
+    Route::get('/my-playlists', [PlaylistController::class, 'myPlaylists'])->name('playlists.my');
+    Route::put('/playlists/{playlist}', [PlaylistController::class, 'update']);
+    Route::delete('/playlists/{playlist}', [PlaylistController::class, 'destroy']);
 
 });
 // Route::get('/watch/{video}', [VideoController::class, 'show'])->name('videos.watch');

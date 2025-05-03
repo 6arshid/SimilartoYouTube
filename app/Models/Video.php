@@ -32,4 +32,9 @@ class Video extends Model {
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function playlists()
+    {
+        return $this->belongsToMany(\App\Models\Playlist::class);
+    }
 }

@@ -231,73 +231,74 @@ class VideoController extends Controller
         return back();
     }
     public function watch($slug)
-    {
-        $video = Video::where('slug', $slug)
-            ->withCount(['likes', 'dislikes'])
-            ->with('user')
-            ->firstOrFail();
-    
-        $video->increment('views');
-    
-        $userLike = null;
-        if (Auth::check()) {
-            $like = $video->likesRelation()
-                ->where('user_id', Auth::id())
-                ->first();
-            if ($like) {
-                $userLike = $like->like ? 'like' : 'dislike';
-            }
+{
+    $video = Video::where('slug', $slug)
+        ->withCount(['likes', 'dislikes'])
+        ->with('user')
+        ->firstOrFail();
+
+    // افزایش بازدید
+    $video->increment('views');
+
+    // وضعیت لایک فعلی برای کاربر واردشده
+    $userLike = null;
+    if (Auth::check()) {
+        $like = $video->likesRelation()
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if ($like) {
+            $userLike = $like->like ? 'like' : 'dislike';
         }
-    
-        $isFollowing = false;
-        if (Auth::check() && $video->user_id !== Auth::id()) {
-            $isFollowing = Auth::user()
-                ->following()
-                ->where('followed_id', $video->user_id)
-                ->exists();
-        }
-    
-        // ✅ دریافت کامنت‌ها همراه با پاسخ‌ها و تعداد لایک‌ها
-        $comments = $video->comments()
-            ->whereNull('parent_id')
-            ->with(['user', 'likes', 'dislikes', 'replies.user', 'replies.likes', 'replies.dislikes'])
-            ->latest()
-            ->get();
-    
-        // ✅ دریافت ویدیوهای دیگر همان کاربر
-        $relatedFromUser = Video::where('user_id', $video->user_id)
-        ->where('id', '!=', $video->id)
+    }
+
+    // بررسی دنبال کردن کاربر صاحب ویدیو
+    $isFollowing = false;
+    if (Auth::check() && $video->user_id !== Auth::id()) {
+        $isFollowing = Auth::user()
+            ->following()
+            ->where('followed_id', $video->user_id)
+            ->exists();
+    }
+
+    // دریافت کامنت‌ها و پاسخ‌ها
+    $comments = $video->comments()
+        ->whereNull('parent_id')
+        ->with(['user', 'likes', 'dislikes', 'replies.user', 'replies.likes', 'replies.dislikes'])
+        ->latest()
+        ->get();
+
+    // دریافت ویدیوهای مرتبط
+    $relatedVideos = Video::where('id', '!=', $video->id)
+        ->where(function ($q) use ($video) {
+            $q->where('user_id', $video->user_id)
+              ->orWhere('user_id', '!=', $video->user_id);
+        })
         ->select('id', 'title', 'slug', 'thumbnail', 'user_id')
         ->with('user')
         ->latest()
         ->take(10)
         ->get();
-    
-    $remaining = 10 - $relatedFromUser->count();
-    
-    $relatedFromOthers = collect();
-    
-    if ($remaining > 0) {
-        $relatedFromOthers = Video::where('user_id', '!=', $video->user_id)
-            ->where('id', '!=', $video->id)
-            ->select('id', 'title', 'slug', 'thumbnail', 'user_id')
-            ->with('user')
-            ->latest()
-            ->take($remaining)
-            ->get();
-    }
-    
-    $relatedVideos = $relatedFromUser->merge($relatedFromOthers);
-    
+
+    // ✅ افزودن Playlist‌های کاربر (برای افزودن ویدیو به لیست)
+    $playlists = Auth::check()
+        ? Auth::user()->playlists()->select('id', 'title')->get()
+        : [];
+
         return Inertia::render('Videos/Show', [
             'video'         => $video,
             'userLike'      => $userLike,
             'isFollowing'   => $isFollowing,
             'comments'      => $comments,
             'relatedVideos' => $relatedVideos,
-            'auth'          => Auth::check() ? ['user' => Auth::user()] : null,
+            'playlists'     => Auth::check()
+                ? Auth::user()->playlists()->select('id', 'title')->get()
+                : [],
+            'auth' => Auth::check() ? ['user' => Auth::user()] : null,
         ]);
-    }
+}
+
+    
     
 public function feed()
 {

@@ -5,16 +5,12 @@ import axios from 'axios';
 
 export default function Dashboard() {
   const { video, userLike, isFollowing, auth, comments = [], relatedVideos = [], playlists = [] } = usePage().props;
-
   const [comment, setComment] = useState('');
   const [replyTo, setReplyTo] = useState(null);
   const [likeCount, setLikeCount] = useState(video.likes_count);
   const [dislikeCount, setDislikeCount] = useState(video.dislikes_count);
   const [userLikeState, setUserLikeState] = useState(userLike);
   const [selectedPlaylist, setSelectedPlaylist] = useState('');
-  const [playlistsState, setPlaylistsState] = useState(playlists);
-  const [showModal, setShowModal] = useState(false);
-  const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
 
   const videoUrl = video.path.startsWith('http') ? video.path : `/storage/${video.path}`;
 
@@ -72,30 +68,7 @@ export default function Dashboard() {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
       },
       body: JSON.stringify({ video_id: video.id }),
-    }).then(() => {
-      alert('Video added to playlist');
-      setSelectedPlaylist('');
-    });
-  };
-
-  const handleCreatePlaylist = () => {
-    if (!newPlaylistTitle.trim()) return;
-
-    fetch('/playlists', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-      },
-      body: JSON.stringify({ title: newPlaylistTitle }),
-    })
-      .then(res => res.json())
-      .then(newPlaylist => {
-        setPlaylistsState([...playlistsState, newPlaylist]);
-        setNewPlaylistTitle('');
-        setShowModal(false);
-        alert('Playlist created.');
-      });
+    }).then(() => alert('Added to playlist'));
   };
 
   const followStatus = typeof isFollowing !== 'undefined' ? isFollowing : false;
@@ -127,7 +100,7 @@ export default function Dashboard() {
             </video>
           </div>
 
-          <div className="mb-6 flex gap-4 flex-wrap items-center">
+          <div className="mb-4 flex gap-4">
             <button
               onClick={() => handleVideoLike(true)}
               className={`px-4 py-2 rounded ${userLikeState === 'like' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
@@ -140,7 +113,9 @@ export default function Dashboard() {
             >
               👎 Dislike ({dislikeCount})
             </button>
+          </div>
 
+          <div className="mb-6 flex gap-4 flex-wrap">
             {auth?.user && video.user_id !== auth.user.id && (
               <button
                 onClick={() => router.post(`/subscribe/${video.user.id}`)}
@@ -149,11 +124,10 @@ export default function Dashboard() {
                 {followStatus ? 'Unfollow' : `Subscribe to ${video.user?.name || 'user'}`}
               </button>
             )}
-
             <button onClick={handleShare} className="px-4 py-2 bg-yellow-500 text-white rounded">Share</button>
             <button onClick={handleDownload} className="px-4 py-2 bg-gray-700 text-white rounded">Download</button>
 
-            {auth?.user && playlistsState.length > 0 && (
+            {auth?.user && playlists.length > 0 && (
               <form onSubmit={handleAddToPlaylist} className="flex items-center gap-2">
                 <select
                   className="border rounded px-2 py-1"
@@ -161,54 +135,16 @@ export default function Dashboard() {
                   value={selectedPlaylist}
                 >
                   <option value="">Add to Playlist</option>
-                  {playlistsState.map(p => (
+                  {playlists.map(p => (
                     <option key={p.id} value={p.id}>{p.title}</option>
                   ))}
                 </select>
-                <button className="bg-blue-600 text-white px-3 py-1 rounded">Add</button>
+                <button className="ml-2 bg-blue-600 text-white px-3 py-1 rounded">Add</button>
               </form>
-            )}
-
-            {auth?.user && (
-              <button
-                onClick={() => setShowModal(true)}
-                className="px-3 py-1 border border-gray-400 rounded text-sm"
-              >
-                + Create Playlist
-              </button>
             )}
           </div>
 
-          {showModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded shadow-md w-full max-w-sm">
-                <h2 className="text-lg font-bold mb-4">Create Playlist</h2>
-                <input
-                  type="text"
-                  value={newPlaylistTitle}
-                  onChange={(e) => setNewPlaylistTitle(e.target.value)}
-                  placeholder="Playlist title"
-                  className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 bg-gray-300 rounded"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreatePlaylist}
-                    className="px-4 py-2 bg-blue-600 text-white rounded"
-                  >
-                    Create
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-<div className="mt-8">
+          <div className="mt-8">
             <h2 className="text-xl font-bold mb-4">Comments</h2>
             <form onSubmit={handleCommentSubmit} className="mb-4">
               <textarea
