@@ -64,7 +64,6 @@ Route::middleware('auth')->group(function () {
         Auth::user()->notifications()->update(['read' => true]);
         return response()->noContent();
     });
-    Route::get('/watch/{slug}', [VideoController::class, 'watch'])->name('videos.watch');
     Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
     Route::get('/playlists/{playlist}', [PlaylistController::class, 'show'])->name('playlists.show');
     Route::post('/playlists/{playlist}/add-video', [PlaylistController::class, 'addVideo'])->name('playlists.addVideo');
@@ -75,5 +74,6 @@ Route::middleware('auth')->group(function () {
 });
 // Route::get('/watch/{video}', [VideoController::class, 'show'])->name('videos.watch');
 Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
+Route::get('/watch/{slug}', [VideoController::class, 'watch'])->name('videos.watch');
 
 require __DIR__.'/auth.php';
