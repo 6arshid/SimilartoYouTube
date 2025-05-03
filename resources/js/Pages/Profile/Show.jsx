@@ -1,6 +1,6 @@
 // resources/js/Pages/Profile/Show.jsx
 import { usePage, Head, useForm } from '@inertiajs/react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from './utils/cropImage';
 
@@ -34,20 +34,33 @@ export default function Profile() {
   const handleCropSave = async () => {
     const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels, cropModal);
     const file = new File([croppedBlob], `${cropModal}.jpg`, { type: 'image/jpeg' });
+    const tempUrl = URL.createObjectURL(croppedBlob);
+
+    setUser(prev => ({ ...prev, [cropModal]: tempUrl }));
     setData(cropModal, file);
 
     post(route('profile.avatar.update'), {
       preserveScroll: true,
-      onSuccess: () => {
-        fetch(`/api/user/${initialUser.id}`)
-          .then(res => res.json())
-          .then(data => {
-            setUser(data);
-            setCropModal(null);
-            setImageSrc(null);
-            clearErrors();
-          });
-      },
+      onFinish: () => {
+        setCropModal(null);
+        setImageSrc(null);
+        clearErrors();
+      }
+    });
+  };
+
+  const handleDeleteImage = (type) => {
+    if (!window.confirm('آیا از حذف تصویر مطمئن هستید؟')) return;
+    const previous = user[type];
+    setUser(prev => ({ ...prev, [type]: null }));
+
+    post(route('profile.avatar.delete'), {
+      [type]: true,
+    }, {
+      preserveScroll: true,
+      onError: () => {
+        setUser(prev => ({ ...prev, [type]: previous }));
+      }
     });
   };
 
@@ -64,29 +77,50 @@ export default function Profile() {
 
       <h1 className="text-2xl font-bold mb-4">پروفایل {user.name}</h1>
 
-      {/* Cover Section */}
       <div className="relative mb-6">
         <img
-          src={user.cover ? `/storage/${user.cover}` : '/images/default-cover.jpg'}
+          src={user.cover ? user.cover.startsWith('blob') ? user.cover : `/storage/${user.cover}` : '/images/default-cover.jpg'}
           alt="کاور"
           className="w-full h-[315px] object-cover rounded"
         />
-        <label className="absolute top-3 right-3 bg-white p-1 rounded-full shadow cursor-pointer">
-          📷
-          <input type="file" accept="image/*" hidden onChange={(e) => handleFileChange(e, 'cover')} />
-        </label>
+        <div className="absolute top-3 right-3 flex gap-2">
+          <label className="bg-white p-1 rounded-full shadow cursor-pointer">
+            📷
+            <input type="file" accept="image/*" hidden onChange={(e) => handleFileChange(e, 'cover')} />
+          </label>
+          {user.cover && (
+            <button
+              onClick={() => handleDeleteImage('cover')}
+              className="bg-white p-1 rounded-full shadow"
+              title="حذف کاور"
+            >
+              🗑️
+            </button>
+          )}
+        </div>
+
         <img
-          src={user.avatar ? `/storage/${user.avatar}` : '/images/default-avatar.jpg'}
+          src={user.avatar ? user.avatar.startsWith('blob') ? user.avatar : `/storage/${user.avatar}` : '/images/default-avatar.jpg'}
           alt="آواتار"
           className="w-[200px] h-[200px] object-cover rounded-full border-4 border-white absolute bottom-[-100px] left-6 bg-white"
         />
-        <label className="absolute bottom-[-110px] left-[160px] bg-white p-1 rounded-full shadow cursor-pointer">
-          📷
-          <input type="file" accept="image/*" hidden onChange={(e) => handleFileChange(e, 'avatar')} />
-        </label>
+        <div className="absolute bottom-[-110px] left-[160px] flex gap-2">
+          <label className="bg-white p-1 rounded-full shadow cursor-pointer">
+            📷
+            <input type="file" accept="image/*" hidden onChange={(e) => handleFileChange(e, 'avatar')} />
+          </label>
+          {user.avatar && (
+            <button
+              onClick={() => handleDeleteImage('avatar')}
+              className="bg-white p-1 rounded-full shadow"
+              title="حذف آواتار"
+            >
+              🗑️
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Crop Modal */}
       {cropModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
           <div className="bg-white p-4 rounded w-full max-w-lg">
@@ -110,12 +144,6 @@ export default function Profile() {
                 className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2"
                 disabled={processing}
               >
-                {processing && (
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
-                    <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
-                  </svg>
-                )}
                 ذخیره تصویر
               </button>
             </div>

@@ -116,4 +116,22 @@ class ProfileController extends Controller
 
         return back();
     }
+    public function deleteAvatar(Request $request)
+{
+    $user = Auth::user();
+
+    if ($request->avatar && $user->avatar) {
+        Storage::disk('public')->delete($user->avatar);
+        $user->avatar = null;
+    }
+
+    if ($request->cover && $user->cover) {
+        Storage::disk('public')->delete($user->cover);
+        $user->cover = null;
+    }
+
+    $user->save();
+
+    return back();
+}
 }
