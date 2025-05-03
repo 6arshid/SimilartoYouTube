@@ -70,12 +70,16 @@ export default function Show() {
       <div className="lg:col-span-2">
         <Head title={video.title} />
         <h1 className="text-2xl font-bold mb-4">{video.title}</h1>
-        <p className="mb-2 text-gray-700">{video.description}</p>
-        <p className="text-sm text-gray-500 mb-4">
-          توسط {video.user?.name || 'نامشخص'} در تاریخ{' '}
-          {new Date(video.created_at).toLocaleDateString('fa-IR')} –
-          <span className="mx-1">👁️ {video.views} بازدید</span>
-        </p>
+        {video.user && (
+          <p className="text-sm text-gray-500 mb-4">
+            توسط{' '}
+            <a href={`/profile/${video.user.id}`} className="text-blue-600 hover:underline">
+              {video.user.name}
+            </a>{' '}
+            در تاریخ {new Date(video.created_at).toLocaleDateString('fa-IR')} – 
+            <span className="mx-1">👁️ {video.views} بازدید</span>
+          </p>
+        )}
 
         <div className="mb-6">
           <video controls className="w-full max-w-xl mx-auto" preload="metadata">

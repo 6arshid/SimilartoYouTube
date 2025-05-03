@@ -80,4 +80,16 @@ class ProfileController extends Controller
     
         return back();
     }
+    public function show(User $user)
+    {
+        $videos = $user->videos()
+            ->select('id', 'title', 'slug', 'views', 'thumbnail', 'created_at')
+            ->latest()
+            ->get();
+
+        return Inertia::render('Profile/Show', [
+            'user'   => $user,
+            'videos' => $videos,
+        ]);
+    }
 }

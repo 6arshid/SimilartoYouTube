@@ -41,5 +41,6 @@ Route::middleware('auth')->group(function () {
 });
 // Route::get('/watch/{video}', [VideoController::class, 'show'])->name('videos.watch');
 Route::get('/watch/{slug}', [VideoController::class, 'watch'])->name('videos.watch');
+Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
 
 require __DIR__.'/auth.php';
