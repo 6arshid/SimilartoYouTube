@@ -50,7 +50,7 @@ export default function Profile() {
   };
 
   const handleDeleteImage = (type) => {
-    if (!window.confirm('آیا از حذف تصویر مطمئن هستید؟')) return;
+    if (!window.confirm('Are you sure you want to delete the image?')) return;
 
     const previous = user[type];
     setUser(prev => ({ ...prev, [type]: null }));
@@ -74,14 +74,14 @@ export default function Profile() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <Head title={`پروفایل ${user.name}`} />
+      <Head title={`Profile of ${user.name}`} />
 
-      <h1 className="text-2xl font-bold mb-4">پروفایل {user.name}</h1>
+      <h1 className="text-2xl font-bold mb-4">Profile of {user.name}</h1>
 
       <div className="relative mb-6">
         <img
           src={user.cover ? `/storage/${user.cover}` : '/images/default-cover.jpg'}
-          alt="کاور"
+          alt="Cover"
           className="w-full h-[315px] object-cover rounded"
         />
         {isOwner && (
@@ -94,7 +94,7 @@ export default function Profile() {
               <button
                 onClick={() => handleDeleteImage('cover')}
                 className="bg-white p-1 rounded-full shadow"
-                title="حذف کاور"
+                title="Delete cover"
               >
                 🗑️
               </button>
@@ -104,7 +104,7 @@ export default function Profile() {
 
         <img
           src={user.avatar ? `/storage/${user.avatar}` : '/images/default-avatar.jpg'}
-          alt="آواتار"
+          alt="Avatar"
           className="w-[200px] h-[200px] object-cover rounded-full border-4 border-white absolute bottom-[-100px] left-6 bg-white"
         />
         {isOwner && (
@@ -117,7 +117,7 @@ export default function Profile() {
               <button
                 onClick={() => handleDeleteImage('avatar')}
                 className="bg-white p-1 rounded-full shadow"
-                title="حذف آواتار"
+                title="Delete avatar"
               >
                 🗑️
               </button>
@@ -142,7 +142,7 @@ export default function Profile() {
             </div>
             <div className="flex justify-end gap-4 mt-4">
               <button onClick={() => setCropModal(null)} className="text-gray-600" disabled={processing}>
-                لغو
+                Cancel
               </button>
               <button
                 onClick={handleCropSave}
@@ -155,7 +155,7 @@ export default function Profile() {
                     <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
                   </svg>
                 )}
-                ذخیره تصویر
+                Save Image
               </button>
             </div>
           </div>
@@ -164,15 +164,15 @@ export default function Profile() {
 
       <div className="mb-12 mt-28 space-y-4">
         <div className="mb-4 flex gap-4 items-center">
-          <span className="font-semibold">مرتب‌سازی بر اساس:</span>
+          <span className="font-semibold">Sort by:</span>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             className="border rounded p-1"
           >
-            <option value="latest">جدیدترین</option>
-            <option value="oldest">قدیمی‌ترین</option>
-            <option value="popular">پربازدیدترین</option>
+            <option value="latest">Latest</option>
+            <option value="oldest">Oldest</option>
+            <option value="popular">Most Viewed</option>
           </select>
         </div>
 
@@ -190,7 +190,7 @@ export default function Profile() {
               />
               <div className="p-2">
                 <h2 className="font-semibold text-sm text-gray-800 line-clamp-2">{video.title}</h2>
-                <p className="text-xs text-gray-500">👁️ {video.views} بازدید</p>
+                <p className="text-xs text-gray-500">👁️ {video.views} views</p>
               </div>
             </a>
           ))}
