@@ -210,7 +210,9 @@ class VideoController extends Controller
     
         $userLike = null;
         if (Auth::check()) {
-            $like = $video->likesRelation()->where('user_id', Auth::id())->first();
+            $like = $video->likesRelation()
+                ->where('user_id', Auth::id())
+                ->first();
             if ($like) {
                 $userLike = $like->like ? 'like' : 'dislike';
             }
@@ -224,18 +226,37 @@ class VideoController extends Controller
                 ->exists();
         }
     
+        // ✅ دریافت کامنت‌ها همراه با پاسخ‌ها و تعداد لایک‌ها
         $comments = $video->comments()
             ->whereNull('parent_id')
-            ->with(['user', 'likes', 'dislikes', 'replies.user'])
+            ->with(['user', 'likes', 'dislikes', 'replies.user', 'replies.likes', 'replies.dislikes'])
             ->latest()
             ->get();
     
+        // ✅ دریافت ویدیوهای دیگر همان کاربر
+        $relatedVideos = Video::where('id', '!=', $video->id)
+            ->where('user_id', $video->user_id)
+            ->with('user')
+            ->latest()
+            ->take(10)
+            ->get();
+    
+        // ✅ اگر ویدیویی نبود، از دیگر کاربران بیاور
+        if ($relatedVideos->isEmpty()) {
+            $relatedVideos = Video::where('id', '!=', $video->id)
+                ->with('user')
+                ->latest()
+                ->take(10)
+                ->get();
+        }
+    
         return Inertia::render('Videos/Show', [
-            'video'       => $video,
-            'userLike'    => $userLike,
-            'isFollowing' => $isFollowing,
-            'comments'    => $comments,
-            'auth'        => Auth::check() ? [ 'user' => Auth::user() ] : null,
+            'video'         => $video,
+            'userLike'      => $userLike,
+            'isFollowing'   => $isFollowing,
+            'comments'      => $comments,
+            'relatedVideos' => $relatedVideos,
+            'auth'          => Auth::check() ? ['user' => Auth::user()] : null,
         ]);
     }
     
