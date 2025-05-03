@@ -17,7 +17,7 @@ export default function Welcome({ laravelVersion, phpVersion, canLogin, canRegis
         >
             <Head title="Welcome" />
 
-            <div className="p-6 text-right">
+            {/* <div className="p-6 text-right">
                 {canLogin && (
                     user ? (
                         <Link
@@ -46,7 +46,7 @@ export default function Welcome({ laravelVersion, phpVersion, canLogin, canRegis
                         </>
                     )
                 )}
-            </div>
+            </div> */}
 
             <div className="flex flex-col items-center justify-center mt-10">
                 <ApplicationLogo className="w-20 h-20 fill-current text-gray-500" />
