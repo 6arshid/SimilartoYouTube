@@ -7,7 +7,7 @@ use App\Http\Controllers\CommentLikeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
+use App\Models\User;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -41,7 +41,9 @@ Route::middleware('auth')->group(function () {
     //     return Inertia::render('Profile/CropUpload');
     // })->name('profile.crop')->middleware('auth');
     Route::post('/profile/avatar/delete', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
-
+    Route::get('/api/user/{user}', function (User $user) {
+        return response()->json($user->only(['id', 'name', 'avatar', 'cover']));
+    });
 
 
 });

@@ -117,21 +117,36 @@ class ProfileController extends Controller
         return back();
     }
     public function deleteAvatar(Request $request)
-{
-    $user = Auth::user();
-
-    if ($request->avatar && $user->avatar) {
-        Storage::disk('public')->delete($user->avatar);
-        $user->avatar = null;
+    {
+        $user = Auth::user();
+    
+        // حذف آواتار
+        if ($request->avatar && $user->avatar) {
+            $relativePath = str_replace('storage/', '', $user->avatar);
+            $fullPath = storage_path('app/public/' . $relativePath);
+    
+            if (file_exists($fullPath)) {
+                unlink($fullPath); // 🔥 حذف واقعی فایل از سیستم
+            }
+    
+            $user->avatar = null;
+        }
+    
+        // حذف کاور
+        if ($request->cover && $user->cover) {
+            $relativePath = str_replace('storage/', '', $user->cover);
+            $fullPath = storage_path('app/public/' . $relativePath);
+    
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+    
+            $user->cover = null;
+        }
+    
+        $user->save();
+    
+        return back();
     }
 
-    if ($request->cover && $user->cover) {
-        Storage::disk('public')->delete($user->cover);
-        $user->cover = null;
-    }
-
-    $user->save();
-
-    return back();
-}
 }
