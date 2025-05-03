@@ -200,25 +200,53 @@ class VideoController extends Controller
         return back();
     }
     public function watch($slug)
-{
-    $video = Video::where('slug', $slug)
-        ->withCount(['likes', 'dislikes'])
-        ->with('user')
-        ->firstOrFail();
-
-    $video->increment('views');
-
-    $userLike = null;
-    if (Auth::check()) {
-        $like = $video->likesRelation()->where('user_id', Auth::id())->first();
-        if ($like) {
-            $userLike = $like->like ? 'like' : 'dislike';
+    {
+        $video = Video::where('slug', $slug)
+            ->withCount(['likes', 'dislikes'])
+            ->with('user')
+            ->firstOrFail();
+    
+        $video->increment('views');
+    
+        $userLike = null;
+        if (Auth::check()) {
+            $like = $video->likesRelation()->where('user_id', Auth::id())->first();
+            if ($like) {
+                $userLike = $like->like ? 'like' : 'dislike';
+            }
         }
+    
+        $isFollowing = false;
+        if (Auth::check() && $video->user_id !== Auth::id()) {
+            $isFollowing = Auth::user()
+                ->following()
+                ->where('followed_id', $video->user_id)
+                ->exists();
+        }
+    
+        $comments = $video->comments()
+            ->whereNull('parent_id')
+            ->with(['user', 'likes', 'dislikes', 'replies.user'])
+            ->latest()
+            ->get();
+    
+        return Inertia::render('Videos/Show', [
+            'video'       => $video,
+            'userLike'    => $userLike,
+            'isFollowing' => $isFollowing,
+            'comments'    => $comments,
+            'auth'        => Auth::check() ? [ 'user' => Auth::user() ] : null,
+        ]);
     }
+    
+public function feed()
+{
+    $user = auth()->user();
+    $videos = Video::whereIn('user_id', $user->following->pluck('id'))
+                   ->latest()
+                   ->with('user')
+                   ->paginate(10);
 
-    return Inertia::render('Videos/Show', [
-        'video'    => $video,
-        'userLike' => $userLike,
-    ]);
+    return Inertia::render('Videos/Feed', ['videos' => $videos]);
 }
 }

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Storage;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -59,5 +61,23 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+    public function subscribe(User $user)
+    {
+        $me = auth()->user();
+    
+        if ($me->id === $user->id) {
+            return back()->with('error', 'نمی‌توانید خودتان را دنبال کنید.');
+        }
+    
+        $alreadyFollowing = $me->following()->where('followed_id', $user->id)->exists();
+    
+        if ($alreadyFollowing) {
+            $me->following()->detach($user->id); // لغو عضویت
+        } else {
+            $me->following()->attach($user->id); // عضویت جدید
+        }
+    
+        return back();
     }
 }

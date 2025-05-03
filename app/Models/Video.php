@@ -28,4 +28,8 @@ class Video extends Model {
     public function dislikes() {
         return $this->hasMany(Like::class)->where('like', false); // :contentReference[oaicite:6]{index=6}
     }
+    public function comments()
+{
+    return $this->hasMany(Comment::class);
+}
 }

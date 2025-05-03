@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VideoController;
-
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentLikeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,6 +31,12 @@ Route::middleware('auth')->group(function () {
      // Extra routes for like/dislike actions
      Route::post('videos/{video}/like', [VideoController::class, 'like'])->name('videos.like');
      Route::post('videos/{video}/dislike', [VideoController::class, 'dislike'])->name('videos.dislike');
+     Route::post('/subscribe/{user}', [ProfileController::class, 'subscribe'])->name('subscribe');
+     Route::get('/feed', [VideoController::class, 'feed'])->name('videos.feed');
+     Route::post('/videos/{video}/comments', [CommentController::class, 'store'])->name('comments.store');
+     Route::post('/comments/{comment}/like', [CommentLikeController::class, 'toggle'])->name('comments.like');
+
+
 });
 // Route::get('/watch/{video}', [VideoController::class, 'show'])->name('videos.watch');
 Route::get('/watch/{slug}', [VideoController::class, 'watch'])->name('videos.watch');
