@@ -38,7 +38,7 @@ class VideoController extends Controller
 
     $query->orderBy('created_at', 'desc');
 
-    $videos = $query->paginate(5)->withQueryString();
+    $videos = $query->paginate(30)->withQueryString();
 
     if ($request->wantsJson()) {
         return response()->json($videos);
