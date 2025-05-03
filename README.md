@@ -10,6 +10,8 @@
 - **Comments**: Comment on videos with support for nested replies.
 - **Video Search**: Search functionality to find videos by title or description.
 - **User Channels**: Each user has a personal channel page listing all their uploads.
+- **Playlists**: Users can create and manage custom playlists, add/remove videos, and play them in order.
+- **Notifications**: Real-time notifications for new subscriptions, comments, likes, and uploads.
 - **Responsive UI**: Mobile-first design, works across various screen sizes.
 
 ## Requirements
@@ -73,7 +75,11 @@ php artisan db:seed
 php artisan serve
 ```
 
-Application should be accessible at `http://localhost:8000`.
+Application should be accessible at:
+
+```
+http://localhost:8000
+```
 
 ### 9. Compile Frontend Assets
 
@@ -96,6 +102,7 @@ npm run build
 - Ensure the `storage/` and `bootstrap/cache/` directories are writable.
 - Make sure your database is running and accessible.
 - Depending on the frontend framework used, Inertia.js or Vue.js might require additional setup (check the codebase).
+- To use notifications, configure a broadcast driver like Pusher or Laravel Echo in `.env`.
 
 ---
 
