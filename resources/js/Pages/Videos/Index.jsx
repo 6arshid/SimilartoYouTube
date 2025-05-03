@@ -82,23 +82,7 @@ export default function Dashboard(props) {
               placeholder="Enter video title..."
             />
           </div>
-          <div className="mb-2 md:mb-0">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Filter by user:
-            </label>
-            <select
-              value={user}
-              onChange={(e) => setUser(e.target.value)}
-              className="rounded border-gray-300"
-            >
-              <option value="">-- All Users --</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          
           <div className="mb-2 md:mb-0">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Filter by date:
