@@ -48,11 +48,16 @@ Route::middleware('auth')->group(function () {
      Route::post('/videos/{video}/comments', [CommentController::class, 'store'])->name('comments.store');
      Route::post('/comments/{comment}/like', [CommentLikeController::class, 'toggle'])->name('comments.like');
      Route::post('/videos/{video}/like', [VideoController::class, 'toggle']);
-     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
-    Route::post('/profile/avatar/delete', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
-    Route::get('/api/user/{user}', function (User $user) {
-        return response()->json($user->only(['id', 'name', 'avatar', 'cover']));
-    });
+     Route::post('/profile/update-avatar', [ProfileController::class, 'updateAvatar'])
+     ->name('profile.update.avatar');
+ Route::post('/profile/update-cover', [ProfileController::class, 'updateCover'])
+     ->name('profile.update.cover');
+ 
+ // Delete routes
+ Route::delete('/profile/delete-avatar', [ProfileController::class, 'deleteAvatar'])
+     ->name('profile.delete.avatar');
+ Route::delete('/profile/delete-cover', [ProfileController::class, 'deleteCover'])
+     ->name('profile.delete.cover');
     Route::get('/notifications', function () {
         return auth()->user()->notifications()->latest()->get();
     });

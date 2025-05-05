@@ -93,60 +93,71 @@ class ProfileController extends Controller
         ]);
     }
 
+
     public function updateAvatar(Request $request)
     {
         $request->validate([
-            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'cover' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+            'avatar' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $user = Auth::user();
-
-        if ($request->hasFile('avatar')) {
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $avatarPath;
+        $user = auth()->user();
+        
+        // حذف تصویر قبلی
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
         }
 
-        if ($request->hasFile('cover')) {
-            $coverPath = $request->file('cover')->store('covers', 'public');
-            $user->cover = $coverPath;
-        }
+        // ذخیره تصویر جدید
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->update(['avatar' => $path]);
 
-        $user->save();
-
-        return back();
+        return back()->with('success', 'Avatar updated successfully!');
     }
-    public function deleteAvatar(Request $request)
+
+    public function updateCover(Request $request)
     {
-        $user = Auth::user();
-    
-        // حذف آواتار
-        if ($request->avatar && $user->avatar) {
-            $relativePath = str_replace('storage/', '', $user->avatar);
-            $fullPath = storage_path('app/public/' . $relativePath);
-    
-            if (file_exists($fullPath)) {
-                unlink($fullPath); // 🔥 حذف واقعی فایل از سیستم
-            }
-    
-            $user->avatar = null;
+        $request->validate([
+            'cover' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+
+        $user = auth()->user();
+        
+        // حذف تصویر قبلی
+        if ($user->cover) {
+            Storage::disk('public')->delete($user->cover);
         }
-    
-        // حذف کاور
-        if ($request->cover && $user->cover) {
-            $relativePath = str_replace('storage/', '', $user->cover);
-            $fullPath = storage_path('app/public/' . $relativePath);
-    
-            if (file_exists($fullPath)) {
-                unlink($fullPath);
-            }
-    
-            $user->cover = null;
-        }
-    
-        $user->save();
-    
-        return back();
+
+        // ذخیره تصویر جدید
+        $path = $request->file('cover')->store('covers', 'public');
+        $user->update(['cover' => $path]);
+
+        return back()->with('success', 'Cover image updated successfully!');
     }
+    // حذف آواتار
+    public function deleteAvatar()
+    {
+        $user = auth()->user();
+        
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+            $user->update(['avatar' => null]);
+        }
+
+        return back()->with('success', 'Avatar removed successfully!');
+    }
+
+    // حذف کاور
+    public function deleteCover()
+    {
+        $user = auth()->user();
+        
+        if ($user->cover) {
+            Storage::disk('public')->delete($user->cover);
+            $user->update(['cover' => null]);
+        }
+
+        return back()->with('success', 'Cover image removed successfully!');
+    }
+    
 
 }

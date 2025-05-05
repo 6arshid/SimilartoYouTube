@@ -1,8 +1,8 @@
 // resources/js/Pages/Profile/Show.jsx
 import { usePage, Head, useForm } from '@inertiajs/react';
-import { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
-import getCroppedImg from './utils/cropImage';
+import { useState, useRef } from 'react';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 export default function Profile() {
   const { auth, user: initialUser, videos } = usePage().props;
@@ -10,59 +10,170 @@ export default function Profile() {
 
   const [user, setUser] = useState(initialUser);
   const [sort, setSort] = useState('latest');
-  const [cropModal, setCropModal] = useState(null);
-  const [imageSrc, setImageSrc] = useState(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [avatarSrc, setAvatarSrc] = useState(null);
+  const [coverSrc, setCoverSrc] = useState(null);
+  const [avatarCrop, setAvatarCrop] = useState(null);
+  const [coverCrop, setCoverCrop] = useState(null);
+  const [mode, setMode] = useState(null);
+  const avatarRef = useRef(null);
+  const coverRef = useRef(null);
 
-  const { post, setData, processing, clearErrors } = useForm({ avatar: null, cover: null });
+  const { post, setData, delete: destroy } = useForm();
 
-  const onCropComplete = useCallback((_, cropped) => {
-    setCroppedAreaPixels(cropped);
-  }, []);
+  const onAvatarFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setMode('avatar');
+      const reader = new FileReader();
+      reader.addEventListener('load', () => setAvatarSrc(reader.result));
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+// تابع برای crop و resize تصویر
+const processImage = async (imageRef, crop, targetWidth, targetHeight) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d');
 
-  const handleFileChange = (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageSrc(reader.result);
-      setCropModal(type);
-    };
-    reader.readAsDataURL(file);
+  const image = imageRef.current;
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+
+  // محاسبه مختصات و ابعاد crop
+  const cropX = crop.x * scaleX;
+  const cropY = crop.y * scaleY;
+  const cropWidth = crop.width * scaleX;
+  const cropHeight = crop.height * scaleY;
+
+  // رسم تصویر با سایز نهایی
+  ctx.drawImage(
+    image,
+    cropX,
+    cropY,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    targetWidth,
+    targetHeight
+  );
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(new File([blob], 'image.jpg', { type: 'image/jpeg' }));
+    }, 'image/jpeg', 0.9);
+  });
+};
+
+// تابع برای آپلود آواتار
+const handleAvatarUpload = async () => {
+  if (avatarRef.current && avatarCrop?.width && avatarCrop?.height) {
+    const file = await processImage(avatarRef, avatarCrop, 400, 400);
+    setData('avatar', file);
+    post(route('profile.update.avatar'), {
+      onSuccess: () => {
+        setAvatarSrc(null);
+        setAvatarCrop(null);
+        setMode(null);
+        window.location.reload();
+      }
+    });
+  }
+};
+
+// تابع برای آپلود کاور
+const handleCoverUpload = async () => {
+  if (coverRef.current && coverCrop?.width && coverCrop?.height) {
+    const file = await processImage(coverRef, coverCrop, 851, 315);
+    setData('cover', file);
+    post(route('profile.update.cover'), {
+      onSuccess: () => {
+        setCoverSrc(null);
+        setCoverCrop(null);
+        setMode(null);
+        window.location.reload();
+      }
+    });
+  }
+};
+  const onCoverFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setMode('cover');
+      const reader = new FileReader();
+      reader.addEventListener('load', () => setCoverSrc(reader.result));
+      reader.readAsDataURL(e.target.files[0]);
+    }
   };
 
-  const handleCropSave = async () => {
-    const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels, cropModal);
-    const file = new File([croppedBlob], `${cropModal}.jpg`, { type: 'image/jpeg' });
-    setData(cropModal, file);
+  const handleCropComplete = async (type) => {
+    const ref = type === 'avatar' ? avatarRef : coverRef;
+    const crop = type === 'avatar' ? avatarCrop : coverCrop;
 
-    post(route('profile.avatar.update'), {
-      preserveScroll: true,
-      onSuccess: () => {
-        setUser(prev => ({ ...prev, [cropModal]: `${prev[cropModal]}?v=${Date.now()}` }));
-        setCropModal(null);
-        setImageSrc(null);
-        clearErrors();
-      },
-    });
+    if (ref.current && crop?.width && crop?.height) {
+      const croppedImageUrl = await getCroppedImg(
+        ref.current,
+        crop,
+        `${type}.jpeg`
+      );
+      const file = dataURLtoFile(croppedImageUrl, `${type}.jpeg`);
+      
+      setData(type, file);
+      post(route(`profile.update.${type}`), {
+        onSuccess: () => {
+          setAvatarSrc(null);
+          setCoverSrc(null);
+          setAvatarCrop(null);
+          setCoverCrop(null);
+          setMode(null);
+          window.location.reload();
+        }
+      });
+    }
   };
 
   const handleDeleteImage = (type) => {
-    if (!window.confirm('Are you sure you want to delete the image?')) return;
+    if (confirm(`Are you sure you want to delete your ${type}?`)) {
+      destroy(route(`profile.delete.${type}`), {
+        onSuccess: () => {
+          window.location.reload();
+        }
+      });
+    }
+  };
 
-    const previous = user[type];
-    setUser(prev => ({ ...prev, [type]: null }));
+  const getCroppedImg = (image, crop, fileName) => {
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+    const ctx = canvas.getContext('2d');
 
-    post(route('profile.avatar.delete'), {
-      [type]: true,
-    }, {
-      preserveScroll: true,
-      onError: () => {
-        setUser(prev => ({ ...prev, [type]: previous }));
-      },
-    });
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width,
+      crop.height
+    );
+
+    return canvas.toDataURL('image/jpeg');
+  };
+
+  const dataURLtoFile = (dataurl, filename) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
   };
 
   const sortedVideos = [...videos].sort((a, b) => {
@@ -79,88 +190,151 @@ export default function Profile() {
       <h1 className="text-2xl font-bold mb-4">Profile of {user.name}</h1>
 
       <div className="relative mb-6">
-        <img
-          src={user.cover ? `/storage/${user.cover}` : '/images/default-cover.jpg'}
-          alt="Cover"
-          className="w-full h-[315px] object-cover rounded"
-        />
-        {isOwner && (
-          <div className="absolute top-3 right-3 flex gap-2">
-            <label className="bg-white p-1 rounded-full shadow cursor-pointer">
-              📷
-              <input type="file" accept="image/*" hidden onChange={(e) => handleFileChange(e, 'cover')} />
-            </label>
-            {user.cover && (
-              <button
-                onClick={() => handleDeleteImage('cover')}
-                className="bg-white p-1 rounded-full shadow"
-                title="Delete cover"
+        {/* Cover Image */}
+        <div className="relative group">
+          {mode === 'cover' && coverSrc ? (
+            <div className="relative">
+              <ReactCrop
+                crop={coverCrop}
+                onChange={c => setCoverCrop(c)}
+                aspect={851/315}
               >
-                🗑️
-              </button>
-            )}
-          </div>
-        )}
-
-        <img
-          src={user.avatar ? `/storage/${user.avatar}` : '/images/default-avatar.jpg'}
-          alt="Avatar"
-          className="w-[200px] h-[200px] object-cover rounded-full border-4 border-white absolute bottom-[-100px] left-6 bg-white"
-        />
-        {isOwner && (
-          <div className="absolute bottom-[-110px] left-[160px] flex gap-2">
-            <label className="bg-white p-1 rounded-full shadow cursor-pointer">
-              📷
-              <input type="file" accept="image/*" hidden onChange={(e) => handleFileChange(e, 'avatar')} />
-            </label>
-            {user.avatar && (
-              <button
-                onClick={() => handleDeleteImage('avatar')}
-                className="bg-white p-1 rounded-full shadow"
-                title="Delete avatar"
-              >
-                🗑️
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {cropModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded w-full max-w-lg">
-            <div className="relative w-full h-[300px] bg-gray-100">
-              <Cropper
-                image={imageSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={cropModal === 'avatar' ? 1 : 851 / 315}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
+                <img
+                  ref={coverRef}
+                  src={coverSrc}
+                  alt="Cover preview"
+                  className="w-full h-[315px] object-cover rounded"
+                />
+              </ReactCrop>
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                <button
+                  onClick={() => handleCropComplete('cover')}
+                  className="bg-green-500 text-white px-3 py-1 rounded"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setCoverSrc(null);
+                    setCoverCrop(null);
+                    setMode(null);
+                  }}
+                  className="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <img
+                src={user.cover ? `/storage/${user.cover}` : '/images/default-cover.jpg'}
+                alt="Cover"
+                className="w-full h-[315px] object-cover rounded"
               />
-            </div>
-            <div className="flex justify-end gap-4 mt-4">
-              <button onClick={() => setCropModal(null)} className="text-gray-600" disabled={processing}>
-                Cancel
-              </button>
-              <button
-                onClick={handleCropSave}
-                className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2"
-                disabled={processing}
-              >
-                {processing && (
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
-                    <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
-                  </svg>
-                )}
-                Save Image
-              </button>
-            </div>
-          </div>
+              {isOwner && (
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                  <label className="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full cursor-pointer shadow">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onCoverFileChange}
+                      className="hidden"
+                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                  </label>
+                  {user.cover && (
+                    <button
+                      onClick={() => handleDeleteImage('cover')}
+                      className="bg-white/80 hover:bg-white text-red-500 p-2 rounded-full shadow"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
+
+        {/* Avatar Image */}
+        <div className="relative">
+          {mode === 'avatar' && avatarSrc ? (
+            <div className="absolute bottom-[-100px] left-6">
+              <div className="relative">
+                <ReactCrop
+                  crop={avatarCrop}
+                  onChange={c => setAvatarCrop(c)}
+                  aspect={1}
+                  circularCrop
+                >
+                  <img
+                    ref={avatarRef}
+                    src={avatarSrc}
+                    alt="Avatar preview"
+                    className="w-[200px] h-[200px] object-cover rounded-full border-4 border-white bg-white"
+                  />
+                </ReactCrop>
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                  <button
+                    onClick={() => handleCropComplete('avatar')}
+                    className="bg-green-500 text-white px-3 py-1 rounded"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAvatarSrc(null);
+                      setAvatarCrop(null);
+                      setMode(null);
+                    }}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="absolute bottom-[-100px] left-6 group">
+              <img
+                src={user.avatar ? `/storage/${user.avatar}` : '/images/default-avatar.jpg'}
+                alt="Avatar"
+                className="w-[200px] h-[200px] object-cover rounded-full border-4 border-white bg-white"
+              />
+              {isOwner && (
+                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                  <label className="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full cursor-pointer shadow">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onAvatarFileChange}
+                      className="hidden"
+                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                  </label>
+                  {user.avatar && (
+                    <button
+                      onClick={() => handleDeleteImage('avatar')}
+                      className="bg-white/80 hover:bg-white text-red-500 p-2 rounded-full shadow"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="mb-12 mt-28 space-y-4">
         <div className="mb-4 flex gap-4 items-center">
