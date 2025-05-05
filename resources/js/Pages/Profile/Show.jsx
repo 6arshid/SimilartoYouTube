@@ -1,4 +1,4 @@
-// resources/js/Pages/Profile/Show.jsx
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { usePage, Head, useForm, router  } from '@inertiajs/react';
 import { useState, useRef } from 'react';
 import ReactCrop from 'react-image-crop';
@@ -186,10 +186,18 @@ const followStatus = typeof isFollowing !== 'undefined' ? isFollowing : false;
   });
 
   return (
+     <AuthenticatedLayout
+     header={
+      <h2 className="text-xl font-semibold leading-tight text-gray-800">
+         Profile of {user.name}
+      </h2>
+  }
+  >
+    
     <div className="p-6 max-w-5xl mx-auto">
       <Head title={`Profile of ${user.name}`} />
 
-      <h1 className="text-2xl font-bold mb-4">Profile of {user.name}</h1>
+    
 
       <div className="relative mb-6">
         {/* Cover Image */}
@@ -382,5 +390,6 @@ const followStatus = typeof isFollowing !== 'undefined' ? isFollowing : false;
         </div>
       </div>
     </div>
+    </AuthenticatedLayout>
   );
 }
