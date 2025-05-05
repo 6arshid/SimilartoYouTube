@@ -1,13 +1,12 @@
 // resources/js/Pages/Profile/Show.jsx
-import { usePage, Head, useForm } from '@inertiajs/react';
+import { usePage, Head, useForm, router  } from '@inertiajs/react';
 import { useState, useRef } from 'react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
 export default function Profile() {
-  const { auth, user: initialUser, videos } = usePage().props;
+  const { auth, user: initialUser, videos,isFollowing  } = usePage().props;
   const isOwner = auth?.user?.id === initialUser.id;
-
   const [user, setUser] = useState(initialUser);
   const [sort, setSort] = useState('latest');
   const [avatarSrc, setAvatarSrc] = useState(null);
@@ -96,6 +95,9 @@ const handleCoverUpload = async () => {
     });
   }
 };
+const followStatus = typeof isFollowing !== 'undefined' ? isFollowing : false;
+
+
   const onCoverFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setMode('cover');
@@ -334,9 +336,18 @@ const handleCoverUpload = async () => {
             </div>
           )}
         </div>
+
       </div>
 
       <div className="mb-12 mt-28 space-y-4">
+      {auth?.user && user.id !== auth.user.id && (
+  <button
+    onClick={() => router.post(`/subscribe/${user.id}`)}
+    className={`px-4 py-2 rounded ${isFollowing ? 'bg-red-600' : 'bg-purple-600'} text-white`}
+  >
+    {isFollowing ? 'Unfollow' : `Subscribe to ${user.name || 'user'}`}
+  </button>
+)}
         <div className="mb-4 flex gap-4 items-center">
           <span className="font-semibold">Sort by:</span>
           <select

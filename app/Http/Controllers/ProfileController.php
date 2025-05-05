@@ -64,6 +64,7 @@ class ProfileController extends Controller
     }
     public function subscribe(User $user)
     {
+       
         $me = auth()->user();
     
         if ($me->id === $user->id) {
@@ -86,10 +87,21 @@ class ProfileController extends Controller
             ->select('id', 'title', 'slug', 'views', 'thumbnail', 'created_at')
             ->latest()
             ->get();
-
+    
+        // Check if the authenticated user is following this profile user
+        $isFollowing = false;
+        if (Auth::check() && $user->id !== Auth::id()) {
+            $isFollowing = Auth::user()
+                ->following()
+                ->where('followed_id', $user->id)
+                ->exists();
+        }
+    
         return Inertia::render('Profile/Show', [
             'user' => $user,
             'videos' => $videos,
+            'isFollowing' => $isFollowing,
+            'auth' => Auth::check() ? ['user' => Auth::user()] : null,
         ]);
     }
 
