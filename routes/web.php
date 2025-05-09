@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Models\Video;
-use App\Models\Notification;
+use App\Models\MyNotification;
 Route::get('/', function () {
     $topVideos = Video::with('user')
         ->orderByDesc('views')
@@ -57,11 +57,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile/delete-cover', [ProfileController::class, 'deleteCover'])
      ->name('profile.delete.cover');
     Route::get('/notifications', function () {
-        return auth()->user()->notifications()->latest()->get();
+        return auth()->user()->mynotifications()->latest()->get();
     });
     
     Route::post('/notifications/mark-read', function () {
-        Auth::user()->notifications()->update(['read' => true]);
+        echo 'mark-read';die();
+        // Auth::user()->mynotifications()->update(['read' => true]);
+        // return response()->noContent();
+    });
+    Route::get('/notifications/mark-read', function () {
+       
+        Auth::user()->mynotifications()->update(['read' => true]);
         return response()->noContent();
     });
     Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');

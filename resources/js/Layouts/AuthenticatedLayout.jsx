@@ -134,9 +134,16 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 <span className="font-bold text-sm">Notifications</span>
                                                 <button
                                                     onClick={() => {
-                                                        fetch('/notifications/mark-read', { method: 'POST' }).then(() => {
+                                                        fetch('/notifications/mark-read', {
+                                                            method: 'GET',
+                                                            headers: {
+                                                              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                                              'Content-Type': 'application/json',
+                                                            },
+                                                          })
+                                                          .then(() => {
                                                             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                                                        });
+                                                          });
                                                     }}
                                                     className="text-xs text-blue-600"
                                                 >

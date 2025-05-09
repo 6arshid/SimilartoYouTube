@@ -7,7 +7,7 @@ use App\Models\Comment;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Notification;
+use App\Models\MyNotification;
 
 class CommentController extends Controller
 {

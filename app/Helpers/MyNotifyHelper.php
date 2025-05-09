@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\Notification;
+use App\Models\MyNotification;
 
 if (!function_exists('notify')) {
     function notify($userId, $type, $message, $url = null)
 {
-    Notification::create([
+    MyNotification::create([
         'user_id' => $userId,
         'type' => $type,
         'message' => $message,
