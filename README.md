@@ -28,7 +28,7 @@
 
 ```bash
 git clone https://github.com/6arshid/SimilartoYouTube.git
-cd Youtubeclone
+cd SimilartoYouTube
 ```
 
 ### 2. Install PHP Dependencies
