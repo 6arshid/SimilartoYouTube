@@ -1,4 +1,4 @@
-# Youtube Clone - Installation Guide
+# Similar to YouTube - Installation Guide
 
 ## Features
 
@@ -27,7 +27,7 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/6arshid/Youtubeclone.git
+git clone https://github.com/6arshid/SimilartoYouTube.git
 cd Youtubeclone
 ```
 
