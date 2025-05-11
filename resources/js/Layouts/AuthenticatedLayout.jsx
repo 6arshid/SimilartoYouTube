@@ -174,24 +174,30 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     {user.name}
                                 </button>
+{profileDropdownOpen && (
+    <div className="absolute right-0 top-full w-48 bg-white rounded-md shadow-lg py-1 z-50">
+        <Link
+            href={route('profile.show', user.id)} // Pass the logged-in user's ID
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+            Show Profile
+        </Link>
+        <Link
+            href={route('profile.edit')}
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+            Edit Profile
+        </Link>
+        <button
+            type="button"
+            onClick={() => router.post(route('logout'))}
+            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+        >
+            Log Out
+        </button>
+    </div>
+)}
 
-                                {profileDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                        <Link
-                                            href={route('profile.edit')}
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                        >
-                                            Edit Profile
-                                        </Link>
-                                        <button
-                                            type="button"
-                                            onClick={() => router.post(route('logout'))}
-                                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                                        >
-                                            Log Out
-                                        </button>
-                                    </div>
-                                )}
                             </>
                         ) : (
                             <>
